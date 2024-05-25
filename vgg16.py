@@ -8,6 +8,7 @@ from tensorflow.keras.layers import Dense, Flatten, Dropout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 from sklearn.model_selection import StratifiedKFold
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
+from tensorflow.keras.optimizers import Adam
 
 # Configuración de directorios
 melanoma_dir = 'path_to_melanoma_images'       # Reemplaza con la ruta a tu carpeta de imágenes de melanoma
@@ -51,7 +52,7 @@ def create_model():
     for layer in base_model.layers:
         layer.trainable = False
 
-    model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
+    model.compile(optimizer=Adam(), loss='binary_crossentropy', metrics=['accuracy'])
     return model
 
 # Configurar callbacks
@@ -107,3 +108,4 @@ for train_index, val_index in kf.split(data['filename'], data['class']):
 print(f'Resultados de {num_folds}-Fold Cross Validation:')
 for i, result in enumerate(results):
     print(f'Fold {i+1}: Loss = {result[0]}, Accuracy = {result[1]}')
+
