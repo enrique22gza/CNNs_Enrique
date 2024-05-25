@@ -93,7 +93,7 @@ for train_index, val_index in kf.split(data['filename'], data['class']):
     
     model = create_model()
     
-    model_checkpoint = ModelCheckpoint(f'model_fold_{fold_no}.keras', save_best_only=True, monitor='val_loss')
+    model_checkpoint = ModelCheckpoint(f'model_fold_resnet{fold_no}.keras', save_best_only=True, monitor='val_loss')
     
     history = model.fit(
         train_gen_split,
