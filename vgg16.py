@@ -1,5 +1,6 @@
 import os
 import numpy as np
+import pandas as pd
 import tensorflow as tf
 from tensorflow.keras.applications import VGG16
 from tensorflow.keras.models import Model
@@ -9,34 +10,33 @@ from sklearn.model_selection import KFold
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
 # Configuración de directorios
-melanoma_dir = '/Users/enriquegonzalezardura/Documents/DATASETS_copia_prueba/PH2Dataset/train/melanoma_A'
-no_melanoma_dir = '/Users/enriquegonzalezardura/Documents/DATASETS_copia_prueba/PH2Dataset/train/no_melanoma_A'
+melanoma_dir = '/Users/enriquegonzalezardura/Documents/DATASETS_copia_prueba/PH2Dataset/train/melanoma_A'       # Reemplaza con la ruta a tu carpeta de imágenes de melanoma
+no_melanoma_dir = '/Users/enriquegonzalezardura/Documents/DATASETS_copia_prueba/PH2Dataset/train/no_melanoma_A' # Reemplaza con la ruta a tu carpeta de imágenes de no melanoma
 
-# Parámetros
 img_height, img_width = 224, 224
 batch_size = 32
 num_folds = 10
 epochs = 50
 
+# Crear el dataframe para usar con flow_from_dataframe
+filepaths = []
+labels = []
+
+for filename in os.listdir(melanoma_dir):
+    filepaths.append(os.path.join(melanoma_dir, filename))
+    labels.append('melanoma')  # Convertir a string
+
+for filename in os.listdir(no_melanoma_dir):
+    filepaths.append(os.path.join(no_melanoma_dir, filename))
+    labels.append('no_melanoma')  # Convertir a string
+
+data = pd.DataFrame({
+    'filename': filepaths,
+    'class': labels
+})
+
 # Generador de imágenes
-datagen = ImageDataGenerator(rescale=1./255, validation_split=0.1)
-
-# Cargar imágenes
-train_gen = datagen.flow_from_directory(
-    data_dir,
-    target_size=(img_height, img_width),
-    batch_size=batch_size,
-    class_mode='binary',
-    subset='training'
-)
-
-val_gen = datagen.flow_from_directory(
-    data_dir,
-    target_size=(img_height, img_width),
-    batch_size=batch_size,
-    class_mode='binary',
-    subset='validation'
-)
+datagen = ImageDataGenerator(rescale=1./255)
 
 # Crear el modelo VGG16
 def create_model():
@@ -62,15 +62,14 @@ kf = KFold(n_splits=num_folds, shuffle=True)
 fold_no = 1
 results = []
 
-for train_index, val_index in kf.split(train_gen.filepaths):
+for train_index, val_index in kf.split(data):
     print(f'Fold {fold_no}')
     
-    train_files = np.array(train_gen.filepaths)[train_index]
-    val_files = np.array(train_gen.filepaths)[val_index]
+    train_df = data.iloc[train_index]
+    val_df = data.iloc[val_index]
     
     train_gen_split = datagen.flow_from_dataframe(
-        dataframe=pd.DataFrame({'filename': train_files, 'class': train_gen.classes[train_index]}),
-        directory=data_dir,
+        dataframe=train_df,
         x_col='filename',
         y_col='class',
         target_size=(img_height, img_width),
@@ -80,8 +79,7 @@ for train_index, val_index in kf.split(train_gen.filepaths):
     )
     
     val_gen_split = datagen.flow_from_dataframe(
-        dataframe=pd.DataFrame({'filename': val_files, 'class': train_gen.classes[val_index]}),
-        directory=data_dir,
+        dataframe=val_df,
         x_col='filename',
         y_col='class',
         target_size=(img_height, img_width),
