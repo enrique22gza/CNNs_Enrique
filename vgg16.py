@@ -6,13 +6,14 @@ from tensorflow.keras.applications import VGG16
 from tensorflow.keras.models import Model
 from tensorflow.keras.layers import Dense, Flatten, Dropout
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from sklearn.model_selection import KFold
-from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from sklearn.model_selection import StratifiedKFold
+from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 
 # Configuración de directorios
-melanoma_dir = '/Users/enriquegonzalezardura/Documents/DATASETS_copia_prueba/PH2Dataset/train/melanoma_A'       # Reemplaza con la ruta a tu carpeta de imágenes de melanoma
-no_melanoma_dir = '/Users/enriquegonzalezardura/Documents/DATASETS_copia_prueba/PH2Dataset/train/no_melanoma_A' # Reemplaza con la ruta a tu carpeta de imágenes de no melanoma
+melanoma_dir = 'path_to_melanoma_images'       # Reemplaza con la ruta a tu carpeta de imágenes de melanoma
+no_melanoma_dir = 'path_to_no_melanoma_images' # Reemplaza con la ruta a tu carpeta de imágenes de no melanoma
 
+# Parámetros
 img_height, img_width = 224, 224
 batch_size = 32
 num_folds = 10
@@ -58,11 +59,11 @@ early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weig
 reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=0.2, patience=3, min_lr=1e-6)
 
 # Cross-validation
-kf = KFold(n_splits=num_folds, shuffle=True)
+kf = StratifiedKFold(n_splits=num_folds, shuffle=True, random_state=42)
 fold_no = 1
 results = []
 
-for train_index, val_index in kf.split(data):
+for train_index, val_index in kf.split(data['filename'], data['class']):
     print(f'Fold {fold_no}')
     
     train_df = data.iloc[train_index]
@@ -90,11 +91,13 @@ for train_index, val_index in kf.split(data):
     
     model = create_model()
     
+    model_checkpoint = ModelCheckpoint(f'model_fold_{fold_no}.keras', save_best_only=True, monitor='val_loss')
+    
     history = model.fit(
         train_gen_split,
         validation_data=val_gen_split,
         epochs=epochs,
-        callbacks=[early_stopping, reduce_lr]
+        callbacks=[early_stopping, reduce_lr, model_checkpoint]
     )
     
     results.append(model.evaluate(val_gen_split))
