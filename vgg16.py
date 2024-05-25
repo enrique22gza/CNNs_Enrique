@@ -9,9 +9,8 @@ from sklearn.model_selection import KFold
 from tensorflow.keras.callbacks import EarlyStopping, ReduceLROnPlateau
 
 # Configuración de directorios
-data_dir = 'path_to_dataset'  # Reemplaza con la ruta a tu dataset
-melanoma_dir = os.path.join(data_dir, 'melanoma')
-no_melanoma_dir = os.path.join(data_dir, 'no_melanoma')
+melanoma_dir = '/Users/enriquegonzalezardura/Documents/DATASETS_copia_prueba/PH2Dataset/train/melanoma_A'
+no_melanoma_dir = '/Users/enriquegonzalezardura/Documents/DATASETS_copia_prueba/PH2Dataset/train/no_melanoma_A'
 
 # Parámetros
 img_height, img_width = 224, 224
