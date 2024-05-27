@@ -73,9 +73,13 @@ for i, model in enumerate(models):
 print("Visualización de modelos completada.")
 
 # Función para realizar predicciones y visualizar los resultados
+@tf.function
+def predict(model, data):
+    return model(data)
+
 def predict_and_visualize(models, data, labels):
     for i, model in enumerate(models):
-        predictions = model.predict(data)
+        predictions = predict(model, data)
         predicted_labels = np.argmax(predictions, axis=1)
 
         # Plot true vs predicted labels
@@ -106,7 +110,7 @@ def predict_and_visualize(models, data, labels):
         print(f"Visualización de matriz de confusión guardada en: {plot_file}")
 
         # Classification report
-        report = classification_report(labels, predicted_labels, output_dict=True)
+        report = classification_report(labels, predicted_labels, zero_division=0, output_dict=True)
         report_df = pd.DataFrame(report).transpose()
         report_file = os.path.join(output_dir, f"classification_report_{i + 1}.csv")
         report_df.to_csv(report_file)
